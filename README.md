@@ -1,2 +1,2 @@
 # terraform-aws-vm-guardrail-demo
-Intentionally-vulnerable VM on AWS for demo purposes
+Intentionally-misconfigured VM on AWS for demo purposes
