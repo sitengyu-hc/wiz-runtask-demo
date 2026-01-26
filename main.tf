@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "allow_ec2" {
   }
 }
 
-# Insecure Security Group
+# Insecure Security Group.
 
 resource "aws_security_group" "insecure" {
   name   = "insecure-sg"
@@ -77,7 +77,7 @@ resource "aws_security_group" "insecure" {
   }
 }
 
-# Insecure IAM
+# Insecure IAM.
 
 resource "aws_iam_policy" "insecure_policy" {
   name        = "InsecureWildcardPolicy"
