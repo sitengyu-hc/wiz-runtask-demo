@@ -53,7 +53,7 @@ data "aws_iam_policy_document" "allow_ec2" {
 
 resource "aws_security_group" "insecure" {
   name   = "insecure-sg"
-  vpc_id = ""vpc-0453a7f647b768fc0"
+  vpc_id = "vpc-0453a7f647b768fc0"
 
   ingress {
     description = "Open SSH to the world"
