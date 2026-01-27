@@ -13,7 +13,7 @@ provider "aws" {
 
 # ---hardcoded resource IDs
 
-data "aws_subnets" "default" {
+data "aws_subnet" "default" {
   id = "subnet-03c9e27b4070e3385"
 }
 
