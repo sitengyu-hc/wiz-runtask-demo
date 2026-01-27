@@ -8,7 +8,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-west-2"
+  region = "us-east-2"
 }
 
 #-----no data source used due to explicit deny on describe and list actions---#
@@ -46,23 +46,16 @@ resource "aws_security_group" "insecure" {
 
 # Insecure IAM
 
-resource "aws_iam_policy" "insecure_policy" {
-  name        = "InsecureWildcardPolicy"
-  description = "Allows all actions on all resources (INTENTIONALLY BAD)"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
+resource "aws_iam_role" "basic_ec2" {
+  name = "vulnerability-demo"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow",
-      Action   = "*",
-      Resource = "*"
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
     }]
   })
-}
-
-resource "aws_iam_role" "basic_ec2" {
-  name               = "vulnerability-demo"
-  assume_role_policy = data.aws_iam_policy_document.allow_ec2.json
 }
 
 resource "aws_iam_role_policy_attachment" "attach_insecure" {
