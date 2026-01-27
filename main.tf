@@ -11,24 +11,10 @@ provider "aws" {
   region = "us-west-2"
 }
 
-# --- DYNAMIC DISCOVERY DATA SOURCES ---
+# ---hardcoded resource IDs
 
-# Automatically find YOUR default VPC
-data "aws_vpc" "default" {
-  default = true
-}
-
-# Automatically find a default subnet in your VPC
-data "aws_subnets" "all_default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
-# Select the first subnet found in your account
-data "aws_subnet" "selected" {
-  id = data.aws_subnets.all_default.ids[0]
+data "aws_subnets" "default" {
+  id = "subnet-03c9e27b4070e3385"
 }
 
 # Discover your AMI in your own account
@@ -67,7 +53,7 @@ data "aws_iam_policy_document" "allow_ec2" {
 
 resource "aws_security_group" "insecure" {
   name   = "insecure-sg"
-  vpc_id = data.aws_vpc.default.id # Dynamically linked
+  vpc_id = ""vpc-0453a7f647b768fc0"
 
   ingress {
     description = "Open SSH to the world"
@@ -133,7 +119,7 @@ resource "aws_instance" "basic" {
   ami                  = data.aws_ami.hc-security-base.id
   iam_instance_profile = aws_iam_instance_profile.basic_ec2.name
   instance_type        = "m6i.xlarge"
-  subnet_id            = data.aws_subnet.selected.id
+  subnet_id            = data.aws_subnet.default.id
 
   # INSECURE SG
   vpc_security_group_ids = [aws_security_group.insecure.id]
