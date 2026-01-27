@@ -133,7 +133,7 @@ resource "aws_instance" "basic" {
   ami                  = data.aws_ami.hc-security-base.id
   iam_instance_profile = aws_iam_instance_profile.basic_ec2.name
   instance_type        = "m6i.xlarge"
-  subnet_id            = data.aws_subnet.default.id
+  subnet_id            = data.aws_subnet.selected.id
 
   # INSECURE SG
   vpc_security_group_ids = [aws_security_group.insecure.id]
