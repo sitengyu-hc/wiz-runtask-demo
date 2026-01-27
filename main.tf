@@ -11,43 +11,8 @@ provider "aws" {
   region = "us-west-2"
 }
 
-# ---hardcoded resource IDs
+#-----no data source used due to explicit deny on describe and list actions---#
 
-data "aws_subnet" "default" {
-  id = "subnet-03c9e27b4070e3385"
-}
-
-# Discover your AMI in your own account
-data "aws_ami" "hc-security-base" {
-  most_recent = true
-  owners      = ["self"] 
-
-  filter {
-    name   = "name"
-    values = ["hc-security-base-ubuntu-2204*"]
-  }
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
-}
-
-
-data "aws_iam_policy" "security_compute_access" {
-  name = "SecurityComputeAccess"
-}
-
-data "aws_iam_policy_document" "allow_ec2" {
-  statement {
-    sid     = "AllowEC2"
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-}
 
 # Insecure Security Group
 
@@ -98,14 +63,11 @@ resource "aws_iam_policy" "insecure_policy" {
 resource "aws_iam_role" "basic_ec2" {
   name               = "vulnerability-demo"
   assume_role_policy = data.aws_iam_policy_document.allow_ec2.json
-  managed_policy_arns = [
-    data.aws_iam_policy.security_compute_access.arn
-  ]
 }
 
 resource "aws_iam_role_policy_attachment" "attach_insecure" {
   role       = aws_iam_role.basic_ec2.name
-  policy_arn = aws_iam_policy.insecure_policy.arn
+  policy_arn = "arn:aws:iam::856558476393:policy/SecurityComputeAccess" # Use the FULL ARN
 }
 
 resource "aws_iam_instance_profile" "basic_ec2" {
@@ -116,10 +78,10 @@ resource "aws_iam_instance_profile" "basic_ec2" {
 # EC2 Instance (vulnerable)
 
 resource "aws_instance" "basic" {
-  ami                  = data.aws_ami.hc-security-base.id
+  ami                  = "ami-002c8fb8b59607dfb"
   iam_instance_profile = aws_iam_instance_profile.basic_ec2.name
   instance_type        = "m6i.xlarge"
-  subnet_id            = data.aws_subnet.default.id
+  subnet_id            = "subnet-03c9e27b4070e3385"
 
   # INSECURE SG
   vpc_security_group_ids = [aws_security_group.insecure.id]
