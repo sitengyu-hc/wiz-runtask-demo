@@ -8,66 +8,17 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-west-2"
+  region = "us-east-2"
 }
 
-# --- DYNAMIC DISCOVERY DATA SOURCES ---
+#-----no data source used due to explicit deny on describe and list actions---#
 
-# Automatically find YOUR default VPC
-data "aws_vpc" "default" {
-  default = true
-}
-
-# Automatically find a default subnet in your VPC
-data "aws_subnets" "all_default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
-# Select the first subnet found in your account
-data "aws_subnet" "selected" {
-  id = data.aws_subnets.all_default.ids[0]
-}
-
-# Discover your AMI in your own account
-data "aws_ami" "hc-security-base" {
-  most_recent = true
-  owners      = ["self"] 
-
-  filter {
-    name   = "name"
-    values = ["hc-security-base-ubuntu-2204*"]
-  }
-  filter {
-    name   = "state"
-    values = ["available"]
-  }
-}
-
-
-data "aws_iam_policy" "security_compute_access" {
-  name = "SecurityComputeAccess"
-}
-
-data "aws_iam_policy_document" "allow_ec2" {
-  statement {
-    sid     = "AllowEC2"
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ec2.amazonaws.com"]
-    }
-  }
-}
 
 # Insecure Security Group
 
 resource "aws_security_group" "insecure" {
   name   = "insecure-sg"
-  vpc_id = data.aws_vpc.default.id # Dynamically linked
+  vpc_id = "vpc-0453a7f647b768fc0"
 
   ingress {
     description = "Open SSH to the world"
@@ -95,31 +46,21 @@ resource "aws_security_group" "insecure" {
 
 # Insecure IAM
 
-resource "aws_iam_policy" "insecure_policy" {
-  name        = "InsecureWildcardPolicy"
-  description = "Allows all actions on all resources (INTENTIONALLY BAD)"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
+resource "aws_iam_role" "basic_ec2" {
+  name = "vulnerability-demo"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow",
-      Action   = "*",
-      Resource = "*"
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
     }]
   })
 }
 
-resource "aws_iam_role" "basic_ec2" {
-  name               = "vulnerability-demo"
-  assume_role_policy = data.aws_iam_policy_document.allow_ec2.json
-  managed_policy_arns = [
-    data.aws_iam_policy.security_compute_access.arn
-  ]
-}
-
 resource "aws_iam_role_policy_attachment" "attach_insecure" {
   role       = aws_iam_role.basic_ec2.name
-  policy_arn = aws_iam_policy.insecure_policy.arn
+  policy_arn = "arn:aws:iam::856558476393:policy/SecurityComputeAccess" # Use the FULL ARN
 }
 
 resource "aws_iam_instance_profile" "basic_ec2" {
@@ -130,10 +71,10 @@ resource "aws_iam_instance_profile" "basic_ec2" {
 # EC2 Instance (vulnerable)
 
 resource "aws_instance" "basic" {
-  ami                  = data.aws_ami.hc-security-base.id
+  ami                  = "ami-002c8fb8b59607dfb"
   iam_instance_profile = aws_iam_instance_profile.basic_ec2.name
   instance_type        = "m6i.xlarge"
-  subnet_id            = data.aws_subnet.selected.id
+  subnet_id            = "subnet-03c9e27b4070e3385"
 
   # INSECURE SG
   vpc_security_group_ids = [aws_security_group.insecure.id]
