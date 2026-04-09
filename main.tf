@@ -32,20 +32,21 @@ data "aws_subnet" "selected" {
 }
 
 # Discover your AMI in your own account
+# Discover the official Ubuntu 22.04 AMI
 data "aws_ami" "hc-security-base" {
   most_recent = true
-  owners      = ["amazon", "self"]
+  owners      = ["099720109477"] # This is the official AWS Account ID for Canonical (Ubuntu)
 
   filter {
     name   = "name"
-    values = ["hc-security-base-ubuntu-2204*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
+
   filter {
     name   = "state"
     values = ["available"]
   }
 }
-
 
 data "aws_iam_policy" "security_compute_access" {
   name = "SecurityComputeAccess"
