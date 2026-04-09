@@ -34,7 +34,7 @@ data "aws_subnet" "selected" {
 # Discover your AMI in your own account
 data "aws_ami" "hc-security-base" {
   most_recent = true
-  owners      = ["self"] 
+  owners      = ["all"] 
 
   filter {
     name   = "name"
